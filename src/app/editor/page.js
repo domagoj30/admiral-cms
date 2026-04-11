@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/lib/supabase";
 
 // ═══════════════════════════════════════════════════════════
 // ADMIRAL CMS v5 — ULTIMATE EDITION
@@ -774,33 +775,102 @@ function Player({ promos, pages, onAdmin }) {
   </>);
 }
 
-// ═══ MAIN ═══
+// ═══ MAIN — Connected to Supabase ═══
 export default function App() {
   const [mode, setMode] = useState("player");
-  const [promos, setPromos] = useState(initPromos);
-  const [pages, setPages] = useState(initPages);
+  const [promos, setPromos] = useState([]);
+  const [pages, setPages] = useState([]);
   const [editP, setEditP] = useState(null);
   const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load from Supabase on mount
+  useEffect(() => {
+    async function load() {
+      const [promosRes, pagesRes] = await Promise.all([
+        supabase.from("promotions").select("*").order("created_at", { ascending: false }),
+        supabase.from("promo_pages").select("*").order("created_at", { ascending: true }),
+      ]);
+      const dbPromos = (promosRes.data || []).map(p => ({
+        id: p.id, t: p.title, s: p.slug, d: p.description, c: p.category,
+        status: p.status, emoji: p.emoji, grad: p.gradient, cta: p.cta_text,
+        badge: p.badge || "", blocks: p.blocks || [],
+      }));
+      setPromos(dbPromos);
+      setPages(pagesRes.data || []);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
   const show = (m) => { setToast(m); setTimeout(() => setToast(null), 2500); };
   const edit = (p) => { setEditP(p); setMode("editor"); };
-  const save = (u) => { setPromos(prev => prev.map(p => p.id === u.id ? u : p)); show("Spremljeno!"); };
-  const del = (id) => { setPromos(prev => prev.filter(p => p.id !== id)); setMode("admin"); show("Promocija obrisana"); };
-  const createPage = (title, content) => {
-    const pg = { id: "p" + Date.now(), title, slug: toSlug(title), content };
+
+  // Save to Supabase
+  const save = async (u) => {
+    const row = { title: u.t, slug: u.s, description: u.d, category: u.c, status: u.status,
+      emoji: u.emoji, gradient: u.grad, cta_text: u.cta, badge: u.badge || "",
+      blocks: u.blocks, updated_at: new Date().toISOString() };
+    if (typeof u.id === "string" && u.id.length > 10) {
+      await supabase.from("promotions").update(row).eq("id", u.id);
+    } else {
+      const { data } = await supabase.from("promotions").insert(row).select().single();
+      if (data) u.id = data.id;
+    }
+    setPromos(prev => {
+      const exists = prev.find(p => p.id === u.id);
+      return exists ? prev.map(p => p.id === u.id ? u : p) : [u, ...prev];
+    });
+    show("Spremljeno u bazu!");
+  };
+
+  // Delete from Supabase
+  const del = async (id) => {
+    if (typeof id === "string" && id.length > 10) {
+      await supabase.from("promotions").delete().eq("id", id);
+    }
+    setPromos(prev => prev.filter(p => p.id !== id));
+    setMode("admin");
+    show("Promocija obrisana iz baze");
+  };
+
+  // Create page in Supabase
+  const createPage = async (title, content) => {
+    const slug = toSlug(title);
+    const { data } = await supabase.from("promo_pages").insert({ title, slug, content }).select().single();
+    const pg = data || { id: "p" + Date.now(), title, slug, content };
     setPages(prev => [...prev, pg]);
-    show("Stranica kreirana!");
+    show("Stranica kreirana u bazi!");
     return pg;
   };
-  const dup = (p) => {
-    const np = { ...p, id: Date.now(), t: p.t + " (kopija)", s: toSlug(p.t + " kopija"), status: "draft",
+
+  // Duplicate
+  const dup = async (p) => {
+    const np = { ...p, id: undefined, t: p.t + " (kopija)", s: toSlug(p.t + " kopija"), status: "draft",
       blocks: (p.blocks || []).map((b, i) => ({ ...b, id: "d" + Date.now() + i, data: { ...b.data } })) };
-    setPromos(prev => [np, ...prev]); show("Promocija duplicirana!"); edit(np);
-  };
-  const addFromTpl = (tpl) => {
-    const np = { id: Date.now(), t: "Nova " + tpl.name, s: "nova-" + Date.now(), c: "casino", status: "draft", grad: GRADS[Math.floor(Math.random() * GRADS.length)], emoji: tpl.icon, d: "Opis promocije...", cta: "Više", blocks: tpl.blocks.map((b, i) => ({ ...b, id: "nb" + Date.now() + i, data: { ...b.data } })) };
-    setPromos(prev => [np, ...prev]);
+    await save(np);
+    show("Promocija duplicirana!");
     edit(np);
   };
+
+  // Add from template
+  const addFromTpl = async (tpl) => {
+    const np = { t: "Nova " + tpl.name, s: "nova-" + Date.now(), c: "casino", status: "draft",
+      grad: GRADS[Math.floor(Math.random() * GRADS.length)], emoji: tpl.icon, d: "Opis promocije...",
+      cta: "Više", badge: "", blocks: tpl.blocks.map((b, i) => ({ ...b, id: "nb" + Date.now() + i, data: { ...b.data } })) };
+    await save(np);
+    edit(np);
+  };
+
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: "#06091a", color: "#edf0f7", fontFamily: "'Plus Jakarta Sans',sans-serif", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet" />
+      <div style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 28, fontWeight: 800, color: "#f5c518" }}>ADMIRAL CMS</div>
+      <div style={{ fontSize: 13, color: "#8d99b0" }}>Učitavanje iz baze podataka...</div>
+      <div style={{ width: 40, height: 40, border: "3px solid rgba(245,197,24,.15)", borderTop: "3px solid #f5c518", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
   return (
     <div style={{ minHeight: "100vh", background: "#06091a", color: "#edf0f7", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
