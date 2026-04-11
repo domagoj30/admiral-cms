@@ -742,37 +742,64 @@ function Player({ promos, pages, onAdmin }) {
     const nonCtaBlocks = contentBlocks.filter(b => b.type !== "cta");
 
     return (<div style={{ minHeight: "100vh", background: "#06091a" }}>
-      <style>{`.pv-detail-grid{display:block}.pv-detail-sidebar{display:none}
-@media(min-width:900px){.pv-detail-grid{display:grid !important;grid-template-columns:1fr 360px;gap:0;max-width:1100px;margin:0 auto}.pv-detail-sidebar{display:block !important}}`}</style>
+      <style>{`
+.pv-hero-img{height:240px}
+.pv-hero-title-overlay{display:none}
+.pv-hero-title-below{display:block}
+.pv-detail-grid{display:block}
+.pv-detail-sidebar{display:none}
+.pv-desc-mobile{display:none}
+@media(min-width:900px){
+  .pv-hero-img{height:420px}
+  .pv-hero-title-overlay{display:block !important}
+  .pv-hero-title-below{display:none !important}
+  .pv-detail-grid{display:grid !important;grid-template-columns:1fr 340px;gap:0;max-width:1100px;margin:0 auto}
+  .pv-detail-sidebar{display:block !important}
+  .pv-desc-mobile{display:none !important}
+}
+      `}</style>
+
+      {/* Hero image — full width, taller on desktop */}
       <div style={{ position: "relative", overflow: "hidden" }}>
         {heroImg ? (<>
-          <img src={heroImg} alt="" style={{ width: "100%", height: 280, objectFit: "cover", display: "block" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #06091a 0%, rgba(6,9,26,.6) 40%, transparent 70%)" }} />
-        </>) : (<div style={{ height: 260, background: sel.grad, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          <img className="pv-hero-img" src={heroImg} alt="" style={{ width: "100%", objectFit: "cover", objectPosition: "center top", display: "block" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #06091a 0%, rgba(6,9,26,.4) 30%, transparent 60%)" }} />
+        </>) : (<div className="pv-hero-img" style={{ background: sel.grad, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
           <Particles />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #06091a 0%, transparent 40%)" }} />
         </div>)}
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "40px 20px 28px", textAlign: "center" }}>
-          <div style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 30, fontWeight: 900, letterSpacing: "0.01em", textShadow: "0 2px 24px rgba(0,0,0,.6)", lineHeight: 1.2, color: "#fff" }}>{heroTitle}</div>
-          {heroSubtitle && <div style={{ fontSize: 14, color: "rgba(255,255,255,.55)", marginTop: 8, fontWeight: 500 }}>{heroSubtitle}</div>}
-          <div style={{ width: 40, height: 3, borderRadius: 2, background: "linear-gradient(90deg, #f5c518, rgba(245,197,24,.2))", margin: "14px auto 0" }} />
+        {/* Desktop: title overlaid on hero */}
+        <div className="pv-hero-title-overlay" style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "60px 20px 32px", textAlign: "center" }}>
+          <div style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 36, fontWeight: 900, letterSpacing: "0.01em", textShadow: "0 2px 30px rgba(0,0,0,.7)", lineHeight: 1.15, color: "#fff" }}>{heroTitle}</div>
+          {heroSubtitle && <div style={{ fontSize: 15, color: "rgba(255,255,255,.6)", marginTop: 10, fontWeight: 500, textShadow: "0 1px 8px rgba(0,0,0,.5)" }}>{heroSubtitle}</div>}
+          <div style={{ width: 48, height: 3, borderRadius: 2, background: "linear-gradient(90deg, #f5c518, rgba(245,197,24,.15))", margin: "16px auto 0" }} />
         </div>
         <button onClick={() => setSel(null)} style={{ position: "absolute", top: 12, left: 12, background: "rgba(0,0,0,.6)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "10px 16px", color: "#fff", fontSize: 14, cursor: "pointer", fontWeight: 700, zIndex: 20, fontFamily: "inherit", minWidth: 44, minHeight: 44 }}>{"← Natrag"}</button>
       </div>
+
+      {/* Mobile: title BELOW image, not overlaid */}
+      <div className="pv-hero-title-below" style={{ padding: "20px 20px 4px", textAlign: "center" }}>
+        <div style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 26, fontWeight: 900, letterSpacing: "0.01em", lineHeight: 1.2, color: "#fff" }}>{heroTitle}</div>
+        {heroSubtitle && <div style={{ fontSize: 13, color: "rgba(255,255,255,.5)", marginTop: 6, fontWeight: 500 }}>{heroSubtitle}</div>}
+        <div style={{ width: 36, height: 3, borderRadius: 2, background: "linear-gradient(90deg, #f5c518, rgba(245,197,24,.15))", margin: "12px auto 0" }} />
+      </div>
+
+      {/* Content grid */}
       <div className="pv-detail-grid" style={{ padding: "0 16px 48px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 0 24px", width: "100%" }}>
-          <Rv><p style={{ fontSize: 14, color: "#8d99b0", textAlign: "center", lineHeight: 1.7, margin: "16px 0 24px" }}>{sel.d}</p></Rv>
+        {/* Main content */}
+        <div style={{ maxWidth: 680, margin: "0 auto", padding: "12px 0 24px", width: "100%" }}>
           {nonCtaBlocks.map((b, i) => <Rv key={b.id || i} delay={i * 0.06}><RB block={{...b, _pages: pages}} /></Rv>)}
           {ctaBlock && <Rv delay={nonCtaBlocks.length * 0.06}>
             <div style={{ position: "sticky", bottom: 16, zIndex: 10, padding: "12px 0", marginTop: 8 }}>
-              <div style={{ background: "rgba(6,9,26,.85)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderRadius: 16, padding: "4px 0", border: "1px solid rgba(245,197,24,.08)", boxShadow: "0 -8px 32px rgba(0,0,0,.4)" }}>
+              <div style={{ background: "rgba(6,9,26,.88)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderRadius: 16, padding: "4px 0", border: "1px solid rgba(245,197,24,.08)", boxShadow: "0 -8px 32px rgba(0,0,0,.4)" }}>
                 <RB block={{...ctaBlock, _pages: pages}} />
               </div>
             </div>
           </Rv>}
         </div>
+        {/* Desktop sidebar */}
         <div className="pv-detail-sidebar" style={{ padding: "24px 20px", borderLeft: "1px solid rgba(255,255,255,.05)" }}>
-          <div style={{ position: "sticky", top: 80 }}>
+          <div style={{ position: "sticky", top: 24 }}>
             <div style={{ background: "#111d3a", borderRadius: 16, padding: "20px", border: "1px solid rgba(255,255,255,.06)", marginBottom: 12 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 <span style={{ fontSize: 28 }}>{sel.emoji}</span>
