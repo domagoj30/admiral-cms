@@ -733,28 +733,76 @@ function Player({ promos, pages, onAdmin }) {
   const eP = () => { clearTimeout(pr.current); };
 
   if (sel) {
-    const heroImg = sel.blocks?.find(b => b.type === "hero" && b.data?.imageUrl)?.data?.imageUrl;
+    const heroBlock = sel.blocks?.find(b => b.type === "hero");
+    const heroImg = heroBlock?.data?.imageUrl;
+    const heroTitle = heroBlock?.data?.title || sel.t;
+    const heroSubtitle = heroBlock?.data?.subtitle;
+    const contentBlocks = (sel.blocks || []).filter(b => b.type !== "hero");
+    const ctaBlock = contentBlocks.find(b => b.type === "cta");
+    const nonCtaBlocks = contentBlocks.filter(b => b.type !== "cta");
+
     return (<div style={{ minHeight: "100vh", background: "#06091a" }}>
-      <div style={{ position: "relative" }}>
-        {heroImg ? (<><img src={heroImg} alt="" style={{ width: "100%", height: 220, objectFit: "cover", display: "block" }} /><div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #06091a 0%, transparent 40%)" }} /></>
-        ) : (<div style={{ height: 200, background: sel.grad, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}><Particles /><span style={{ fontSize: 48, position: "relative", zIndex: 1 }}>{sel.emoji}</span><div style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 24, fontWeight: 800, color: "#fff", position: "relative", zIndex: 1, marginLeft: 12, textShadow: "0 4px 20px rgba(0,0,0,.5)" }}>{sel.t}</div><div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #06091a 0%, transparent 40%)" }} /></div>)}
+      <style>{`.pv-detail-grid{display:block}.pv-detail-sidebar{display:none}
+@media(min-width:900px){.pv-detail-grid{display:grid !important;grid-template-columns:1fr 360px;gap:0;max-width:1100px;margin:0 auto}.pv-detail-sidebar{display:block !important}}`}</style>
+      <div style={{ position: "relative", overflow: "hidden" }}>
+        {heroImg ? (<>
+          <img src={heroImg} alt="" style={{ width: "100%", height: 280, objectFit: "cover", display: "block" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #06091a 0%, rgba(6,9,26,.6) 40%, transparent 70%)" }} />
+        </>) : (<div style={{ height: 260, background: sel.grad, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+          <Particles />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #06091a 0%, transparent 40%)" }} />
+        </div>)}
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "40px 20px 28px", textAlign: "center" }}>
+          <div style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 30, fontWeight: 900, letterSpacing: "0.01em", textShadow: "0 2px 24px rgba(0,0,0,.6)", lineHeight: 1.2, color: "#fff" }}>{heroTitle}</div>
+          {heroSubtitle && <div style={{ fontSize: 14, color: "rgba(255,255,255,.55)", marginTop: 8, fontWeight: 500 }}>{heroSubtitle}</div>}
+          <div style={{ width: 40, height: 3, borderRadius: 2, background: "linear-gradient(90deg, #f5c518, rgba(245,197,24,.2))", margin: "14px auto 0" }} />
+        </div>
         <button onClick={() => setSel(null)} style={{ position: "absolute", top: 12, left: 12, background: "rgba(0,0,0,.6)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, padding: "10px 16px", color: "#fff", fontSize: 14, cursor: "pointer", fontWeight: 700, zIndex: 20, fontFamily: "inherit", minWidth: 44, minHeight: 44 }}>{"← Natrag"}</button>
       </div>
-      <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 16px 48px" }}>
-        <Rv><p style={{ fontSize: 14, color: "#8d99b0", textAlign: "center", lineHeight: 1.7, margin: "0 0 24px" }}>{sel.d}</p></Rv>
-        {(sel.blocks || []).map((b, i) => <Rv key={b.id || i} delay={i * 0.06}><RB block={{...b, _pages: pages}} /></Rv>)}
+      <div className="pv-detail-grid" style={{ padding: "0 16px 48px" }}>
+        <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 0 24px", width: "100%" }}>
+          <Rv><p style={{ fontSize: 14, color: "#8d99b0", textAlign: "center", lineHeight: 1.7, margin: "16px 0 24px" }}>{sel.d}</p></Rv>
+          {nonCtaBlocks.map((b, i) => <Rv key={b.id || i} delay={i * 0.06}><RB block={{...b, _pages: pages}} /></Rv>)}
+          {ctaBlock && <Rv delay={nonCtaBlocks.length * 0.06}>
+            <div style={{ position: "sticky", bottom: 16, zIndex: 10, padding: "12px 0", marginTop: 8 }}>
+              <div style={{ background: "rgba(6,9,26,.85)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderRadius: 16, padding: "4px 0", border: "1px solid rgba(245,197,24,.08)", boxShadow: "0 -8px 32px rgba(0,0,0,.4)" }}>
+                <RB block={{...ctaBlock, _pages: pages}} />
+              </div>
+            </div>
+          </Rv>}
+        </div>
+        <div className="pv-detail-sidebar" style={{ padding: "24px 20px", borderLeft: "1px solid rgba(255,255,255,.05)" }}>
+          <div style={{ position: "sticky", top: 80 }}>
+            <div style={{ background: "#111d3a", borderRadius: 16, padding: "20px", border: "1px solid rgba(255,255,255,.06)", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 28 }}>{sel.emoji}</span>
+                <div>
+                  <div style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 18, fontWeight: 800 }}>{sel.t}</div>
+                  <span style={{ padding: "2px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700, background: sel.c === "casino" ? "rgba(34,197,94,.1)" : "rgba(74,158,255,.1)", color: sel.c === "casino" ? "#22c55e" : "#4a9eff" }}>{sel.c === "casino" ? "Casino" : "Klađenje"}</span>
+                </div>
+              </div>
+              <div style={{ fontSize: 13, color: "#8d99b0", lineHeight: 1.7 }}>{sel.d}</div>
+            </div>
+            {ctaBlock && <div style={{ background: "#111d3a", borderRadius: 16, padding: "16px", border: "1px solid rgba(255,255,255,.06)" }}>
+              <button style={{ background: "linear-gradient(135deg, #4a9eff 0%, #2d7ad6 100%)", color: "#fff", border: "none", padding: "16px 40px", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", width: "100%", letterSpacing: "0.04em", boxShadow: "0 6px 24px rgba(74,158,255,.3), inset 0 1px 0 rgba(255,255,255,.15)", textTransform: "uppercase" }}>{ctaBlock.data?.text || "KLIKNI"}</button>
+            </div>}
+          </div>
+        </div>
       </div>
     </div>);
   }
 
   return (<>
+    <style>{`.pv-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr)) !important}
+@media(min-width:768px){.pv-grid{grid-template-columns:repeat(2,1fr) !important}}
+@media(min-width:1100px){.pv-grid{grid-template-columns:repeat(3,1fr) !important}}`}</style>
     <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,.05)", background: "rgba(15,26,53,.75)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", position: "sticky", top: 0, zIndex: 100 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 18, cursor: "pointer", opacity: 0.7 }}>{"☰"}</span><div onMouseDown={sP} onMouseUp={eP} onTouchStart={sP} onTouchEnd={eP} style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "0.06em", cursor: "pointer", userSelect: "none", WebkitUserSelect: "none" }}>ADMIRAL</div></div>
       <button style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#f5c518", color: "#06091a", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>REGISTRACIJA</button>
     </header>
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 12px 48px" }}>
       <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20 }}>{[{ k: "sve", l: "Sve" }, { k: "casino", l: "Casino" }, { k: "kladenje", l: "Klađenje" }].map(x => (<button key={x.k} onClick={() => setF(x.k)} style={{ padding: "8px 22px", borderRadius: 50, border: f === x.k ? "1px solid #edf0f7" : "1px solid rgba(255,255,255,.05)", background: f === x.k ? "rgba(255,255,255,.05)" : "transparent", color: f === x.k ? "#edf0f7" : "#8d99b0", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{x.l}</button>))}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>{list.map((p, idx) => {
+      <div className="pv-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>{list.map((p, idx) => {
         const cardImg = p.blocks?.find(b => b.type === "hero" && b.data?.imageUrl)?.data?.imageUrl;
         return (<Rv key={p.id} delay={idx * 0.04}><div onClick={() => setSel(p)} onMouseEnter={() => setHov(p.id)} onMouseLeave={() => setHov(null)} style={{ background: "#111d3a", borderRadius: 16, overflow: "hidden", border: hov === p.id ? "1px solid rgba(245,197,24,.12)" : "1px solid rgba(255,255,255,.05)", cursor: "pointer", transition: "all .3s", display: "flex", flexDirection: "column", transform: hov === p.id ? "translateY(-5px)" : "none", boxShadow: hov === p.id ? "0 14px 44px rgba(0,0,0,.45)" : "none" }}>
           <div style={{ height: 175, position: "relative", overflow: "hidden", background: p.grad, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -767,7 +815,6 @@ function Player({ promos, pages, onAdmin }) {
             <h3 style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 17, fontWeight: 800, margin: "0 0 8px" }}>{p.t}</h3>
             <p style={{ fontSize: 13, color: "#8d99b0", lineHeight: 1.55, margin: "0 0 14px", flex: 1, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.d}</p>
             <button style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #4a9eff, #2d7ad6)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(74,158,255,.25)" }}>{p.cta || "Više"}</button>
-            <div style={{ fontSize: 11, color: "#4a5670", textAlign: "center", marginTop: 10, textDecoration: "underline" }}>Više detalja i uvjeti promocije</div>
           </div>
         </div></Rv>);
       })}</div>
