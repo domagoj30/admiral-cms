@@ -8,6 +8,7 @@ const navItems = [
   { href: '/admin/pages', icon: '☰', label: 'Stranice' },
   { href: '/admin/templates', icon: '❒', label: 'Predlošci' },
   { href: '/admin/campaigns', icon: '⚡', label: 'Kampanje' },
+  { href: '/editor', icon: '✦', label: 'Visual Editor', highlight: true },
 ];
 
 export default function AdminLayout({ children }) {
@@ -64,8 +65,8 @@ export default function AdminLayout({ children }) {
         {/* Footer */}
         {!collapsed && (
           <div className="px-5 py-4 border-t border-white/5 text-[11px] text-[#5a6577]">
-            <div className="text-[#8b95a5] font-semibold mb-1">Novi CMS v1.0</div>
-            Next.js + Supabase
+            <div className="text-[#8b95a5] font-semibold mb-1">Admiral CMS v5</div>
+            Next.js + Supabase + Visual Editor
           </div>
         )}
       </div>
