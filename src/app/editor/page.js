@@ -812,43 +812,56 @@ function Player({ promos, pages, onAdmin }) {
   }
 
   return (<>
-    <style>{`.pv-grid{display:grid;grid-template-columns:1fr;gap:16px}
-@media(min-width:576px){.pv-grid{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:992px){.pv-grid{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:1600px){.pv-grid{grid-template-columns:repeat(4,1fr)}}`}</style>
-    <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,.05)", background: "#0F0D25", position: "sticky", top: 0, zIndex: 100 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 18, cursor: "pointer", opacity: 0.7 }}>{"☰"}</span><div onMouseDown={sP} onMouseUp={eP} onTouchStart={sP} onTouchEnd={eP} style={{ fontFamily: "Barlow,sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "0.06em", cursor: "pointer", userSelect: "none", WebkitUserSelect: "none" }}>ADMIRAL</div></div>
+    <style>{`.pv-grid{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:576px){.pv-grid{grid-template-columns:repeat(2,1fr);gap:16px}}
+@media(min-width:992px){.pv-grid{grid-template-columns:repeat(3,1fr);gap:20px}}
+@media(min-width:1600px){.pv-grid{grid-template-columns:repeat(4,1fr);gap:20px}}
+.pv-card{background:#0D1A3C;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;height:100%;transition:transform .2s}
+.pv-card:hover{transform:translateY(-2px)}`}</style>
+    <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", background: "#0F0D25", position: "sticky", top: 0, zIndex: 100 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ fontSize: 20, cursor: "pointer", color: "#fff" }}>{"☰"}</span>
+        <div onMouseDown={sP} onMouseUp={eP} onTouchStart={sP} onTouchEnd={eP} style={{ fontFamily: "Barlow,sans-serif", fontSize: 24, fontWeight: 800, letterSpacing: "0.04em", cursor: "pointer", userSelect: "none", WebkitUserSelect: "none", color: "#fff" }}>ADMIRAL</div>
+      </div>
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <button style={{ padding: "5px 19px", borderRadius: 32, border: "none", background: "#4fbf24", color: "#fff", fontSize: 14, fontWeight: 400, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase" }}>Uplata</button>
-        <button style={{ padding: "5px 14px", borderRadius: 32, border: "1px solid #fff", background: "transparent", color: "#fff", fontSize: 14, fontWeight: 400, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase" }}>Prijava</button>
+        <button style={{ padding: "6px 20px", borderRadius: 32, border: "none", background: "#4fbf24", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "Barlow,sans-serif", textTransform: "uppercase" }}>Uplata</button>
+        <button style={{ padding: "6px 16px", borderRadius: 32, border: "1px solid #fff", background: "transparent", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "Barlow,sans-serif", textTransform: "uppercase" }}>Prijava</button>
       </div>
     </header>
-    {/* Sub-navigation — Nagrade / Promocije */}
-    <div style={{ background: "#002157", display: "flex", justifyContent: "center", gap: 15, padding: "0", borderBottom: "1px solid rgba(255,255,255,.1)" }}>
-      <div style={{ padding: "8px 0", fontSize: 16, fontWeight: 500, color: "rgba(255,255,255,.6)", cursor: "pointer", position: "relative" }}>Nagrade</div>
-      <div style={{ padding: "8px 0", fontSize: 16, fontWeight: 500, color: "#fff", cursor: "pointer", position: "relative" }}>Promocije<div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: 4, background: "#4188FE", borderRadius: "10px 10px 0 0" }} /></div>
+    {/* Sub-nav */}
+    <div style={{ background: "#002157", display: "flex", justifyContent: "center", gap: 20 }}>
+      <div style={{ padding: "10px 0", fontSize: 16, fontWeight: 500, color: "rgba(255,255,255,.5)", cursor: "pointer" }}>Nagrade</div>
+      <div style={{ padding: "10px 0", fontSize: 16, fontWeight: 500, color: "#fff", cursor: "pointer", position: "relative" }}>Promocije<div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: 4, background: "#4188FE", borderRadius: "10px 10px 0 0" }} /></div>
     </div>
-    <div style={{ maxWidth: 1340, margin: "0 auto", padding: "20px 15px 48px", fontFamily: "Barlow,sans-serif" }}>
-      {/* Filter buttons — admiral.hr style */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 15, marginBottom: 20 }}>{[{ k: "sve", l: "Sve" }, { k: "casino", l: "Casino" }, { k: "kladenje", l: "Klađenje" }].map(x => (<button key={x.k} onClick={() => setF(x.k)} style={{ padding: 8, borderRadius: 4, border: f === x.k ? "2px solid #2B80FF" : "1px solid #fff", background: "transparent", color: "#fff", fontSize: 14, fontWeight: 400, cursor: "pointer", fontFamily: "inherit" }}>{x.l}</button>))}</div>
-      {/* Promo cards grid — admiral.hr exact layout */}
+    <div style={{ maxWidth: 1340, margin: "0 auto", padding: "24px 16px 60px", fontFamily: "Barlow,sans-serif", background: "#0C092A" }}>
+      {/* Filter buttons */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 24 }}>{[{ k: "sve", l: "Sve" }, { k: "casino", l: "Casino" }, { k: "kladenje", l: "Klađenje" }].map(x => (
+        <button key={x.k} onClick={() => setF(x.k)} style={{ padding: "7px 16px", borderRadius: 4, border: f === x.k ? "2px solid #2B80FF" : "1px solid rgba(255,255,255,.8)", background: "transparent", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "Barlow,sans-serif" }}>{x.l}</button>
+      ))}</div>
+      {/* Cards grid */}
       <div className="pv-grid">{list.map((p, idx) => {
         const cardImg = p.cardImage || p.blocks?.find(b => b.type === "hero" && b.data?.imageUrl)?.data?.imageUrl;
-        const hasLongerText = (p.d || "").length > 120;
-        return (<Rv key={p.id} delay={idx * 0.04}>
-          <div onClick={() => setSel(p)} style={{ background: "#0D1A3C", borderRadius: 0, overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column", height: "100%" }}>
-            {/* Card image — full width, natural height like admiral.hr */}
-            {cardImg ? <img src={cardImg} alt="" style={{ width: "100%", display: "block" }} />
-            : <div style={{ height: 180, background: p.grad, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}><Particles /><span style={{ fontSize: 48, position: "relative", zIndex: 1 }}>{p.emoji}</span></div>}
-            {/* Card content */}
-            <div style={{ padding: "16px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
-              <h2 style={{ fontFamily: "Barlow,sans-serif", fontSize: 18, fontWeight: 700, margin: "0 0 12px", textTransform: "uppercase", lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.t}</h2>
-              <div style={{ fontSize: 14, color: "rgba(255,255,255,.75)", lineHeight: 1.6, flex: 1, display: "-webkit-box", WebkitLineClamp: hasLongerText ? 4 : 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.d}</div>
-              {/* CTA button — admiral.hr blue primary btn */}
-              <div style={{ textAlign: "center", marginTop: 16 }}>
-                <button style={{ width: "80%", padding: "10px 0", borderRadius: 32, border: "none", background: "#4188FE", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{p.cta || "Više"}</button>
-                <div style={{ marginTop: 10, fontSize: 13, color: "rgba(255,255,255,.5)", cursor: "pointer" }}>Više detalja i uvjeti promocije</div>
-              </div>
+        return (<Rv key={p.id} delay={idx * 0.03}>
+          <div className="pv-card" onClick={() => setSel(p)}>
+            {/* Image area — fixed aspect ratio like admiral.hr */}
+            <div style={{ position: "relative", paddingTop: cardImg ? 0 : "56.25%", overflow: "hidden" }}>
+              {cardImg ? (
+                <img src={cardImg} alt="" style={{ width: "100%", display: "block" }} />
+              ) : (
+                <div style={{ position: "absolute", inset: 0, background: p.grad, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ fontSize: 56, filter: "drop-shadow(0 4px 12px rgba(0,0,0,.3))" }}>{p.emoji}</span>
+                </div>
+              )}
+            </div>
+            {/* Text content */}
+            <div style={{ padding: "16px 16px 8px", flex: 1, display: "flex", flexDirection: "column" }}>
+              <h2 style={{ fontFamily: "Barlow,sans-serif", fontSize: 18, fontWeight: 700, margin: "0 0 10px", textTransform: "uppercase", lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", color: "#fff" }}>{p.t}</h2>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,.7)", lineHeight: 1.65, margin: 0, flex: 1, display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.d}</p>
+            </div>
+            {/* CTA area */}
+            <div style={{ padding: "8px 16px 16px", textAlign: "center" }}>
+              <button style={{ width: "80%", padding: "10px 0", borderRadius: 32, border: "none", background: "#4188FE", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "Barlow,sans-serif" }}>{p.cta || "Više"}</button>
+              <div style={{ marginTop: 10, fontSize: 13, color: "rgba(255,255,255,.45)", cursor: "pointer" }}>Više detalja i uvjeti promocije</div>
             </div>
           </div>
         </Rv>);
