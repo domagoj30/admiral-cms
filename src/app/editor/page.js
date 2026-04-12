@@ -813,9 +813,9 @@ function Player({ promos, pages, onAdmin }) {
 
   return (<>
     <style>{`.pv-grid{display:grid;grid-template-columns:1fr;gap:12px}
-@media(min-width:576px){.pv-grid{grid-template-columns:repeat(2,1fr);gap:16px}}
-@media(min-width:992px){.pv-grid{grid-template-columns:repeat(3,1fr);gap:20px}}
-@media(min-width:1600px){.pv-grid{grid-template-columns:repeat(4,1fr);gap:20px}}
+@media(min-width:576px){.pv-grid{grid-template-columns:repeat(2,1fr);gap:12px}}
+@media(min-width:992px){.pv-grid{grid-template-columns:repeat(3,1fr);gap:12px}}
+@media(min-width:1600px){.pv-grid{grid-template-columns:repeat(4,1fr);gap:14px}}
 .pv-card{background:#0D1A3C;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;height:100%;transition:transform .2s}
 .pv-card:hover{transform:translateY(-2px)}`}</style>
     <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px", background: "#0F0D25", position: "sticky", top: 0, zIndex: 100 }}>
@@ -833,7 +833,7 @@ function Player({ promos, pages, onAdmin }) {
       <div style={{ padding: "10px 0", fontSize: 16, fontWeight: 500, color: "rgba(255,255,255,.5)", cursor: "pointer" }}>Nagrade</div>
       <div style={{ padding: "10px 0", fontSize: 16, fontWeight: 500, color: "#fff", cursor: "pointer", position: "relative" }}>Promocije<div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: 4, background: "#4188FE", borderRadius: "10px 10px 0 0" }} /></div>
     </div>
-    <div style={{ maxWidth: 1340, margin: "0 auto", padding: "24px 16px 60px", fontFamily: "Barlow,sans-serif", background: "#0C092A" }}>
+    <div style={{ margin: "0 auto", padding: "24px 8px 60px", fontFamily: "Barlow,sans-serif", background: "#0C092A" }}>
       {/* Filter buttons */}
       <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 24 }}>{[{ k: "sve", l: "Sve" }, { k: "casino", l: "Casino" }, { k: "kladenje", l: "Klađenje" }].map(x => (
         <button key={x.k} onClick={() => setF(x.k)} style={{ padding: "7px 16px", borderRadius: 4, border: f === x.k ? "2px solid #2B80FF" : "1px solid rgba(255,255,255,.8)", background: "transparent", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "Barlow,sans-serif" }}>{x.l}</button>
