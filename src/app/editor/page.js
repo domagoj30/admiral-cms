@@ -442,6 +442,9 @@ function Editor({ promo, onSave, onBack, onDelete, pages, onCreatePage }) {
   const [ctaTxt, setCtaTxt] = useState(promo.cta || "Više");
   const [emoji, setEmoji] = useState(promo.emoji || "🎁");
   const [status, setStatus] = useState(promo.status || "draft");
+  const [cardImage, setCardImage] = useState(promo.cardImage || "");
+  const [desktopImage, setDesktopImage] = useState(promo.desktopImage || "");
+  const [mobileImage, setMobileImage] = useState(promo.mobileImage || "");
   const [history, setHistory] = useState([]);
   const [future, setFuture] = useState([]);
 
@@ -458,7 +461,7 @@ function Editor({ promo, onSave, onBack, onDelete, pages, onCreatePage }) {
   const upd = (id, u) => { setBlocks(prev => prev.map(b => b.id === id ? u : b)); markDirty(); };
   const selB = blocks.find(b => b.id === sel);
   const [showExitWarn, setShowExitWarn] = useState(false);
-  const save = () => { onSave({ ...promo, t: title, d: desc, c: cat, s: slug, cta: ctaTxt, emoji, status, blocks }); setSaved(true); setDirty(false); setTimeout(() => setSaved(false), 2000); };
+  const save = () => { onSave({ ...promo, t: title, d: desc, c: cat, s: slug, cta: ctaTxt, emoji, status, cardImage, desktopImage, mobileImage, blocks }); setSaved(true); setDirty(false); setTimeout(() => setSaved(false), 2000); };
   const handleBack = () => { if (dirty) { setShowExitWarn(true); } else { onBack(); } };
 
   // Desktop sidebar content — rendered as JSX variable, NOT a component (prevents input focus loss)
@@ -589,6 +592,25 @@ function Editor({ promo, onSave, onBack, onDelete, pages, onCreatePage }) {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>{EMOJIS.map(e => (
             <button key={e} onClick={() => { setEmoji(e); markDirty(); }} style={{ width: 36, height: 36, borderRadius: 8, border: emoji === e ? "2px solid #f5c518" : "1px solid rgba(255,255,255,.05)", background: emoji === e ? "rgba(245,197,24,.08)" : "transparent", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{e}</button>
           ))}</div>
+        </div>
+        {/* ── 3 Promotional Images (admiral.hr style) ── */}
+        <div style={{ marginBottom: 10, padding: "12px", borderRadius: 10, background: "rgba(65,136,254,.04)", border: "1px solid rgba(65,136,254,.12)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#4188FE", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>Slike promocije (3 veličine)</div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={lst}>Slika za karticu (listing)</label>
+            <input value={cardImage} onChange={e => { setCardImage(e.target.value); markDirty(); }} placeholder="https://... (kartica na /promotions)" style={ist} />
+            {cardImage && <img src={cardImage} alt="" style={{ width: "100%", height: 50, objectFit: "cover", borderRadius: 6, marginTop: 4 }} />}
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <label style={lst}>Desktop banner (detail stranica)</label>
+            <input value={desktopImage} onChange={e => { setDesktopImage(e.target.value); markDirty(); }} placeholder="https://... (široki banner)" style={ist} />
+            {desktopImage && <img src={desktopImage} alt="" style={{ width: "100%", height: 50, objectFit: "cover", borderRadius: 6, marginTop: 4 }} />}
+          </div>
+          <div style={{ marginBottom: 4 }}>
+            <label style={lst}>Mobilni banner (detail stranica)</label>
+            <input value={mobileImage} onChange={e => { setMobileImage(e.target.value); markDirty(); }} placeholder="https://... (mobilni banner)" style={ist} />
+            {mobileImage && <img src={mobileImage} alt="" style={{ width: "100%", height: 50, objectFit: "cover", borderRadius: 6, marginTop: 4 }} />}
+          </div>
         </div>
         <DeleteBtn onDelete={() => onDelete(promo.id)} />
       </div>
@@ -734,42 +756,52 @@ function Player({ promos, pages, onAdmin }) {
 
   if (sel) {
     const heroBlock = sel.blocks?.find(b => b.type === "hero");
-    const heroImg = heroBlock?.data?.imageUrl;
     const heroTitle = heroBlock?.data?.title || sel.t;
     const heroSubtitle = heroBlock?.data?.subtitle;
     const contentBlocks = (sel.blocks || []).filter(b => b.type !== "hero");
     const ctaBlock = contentBlocks.find(b => b.type === "cta");
     const nonCtaBlocks = contentBlocks.filter(b => b.type !== "cta");
+    // Use separate images: desktopImage for desktop, mobileImage for mobile, fall back to hero imageUrl
+    const fallbackImg = heroBlock?.data?.imageUrl;
+    const deskImg = sel.desktopImage || fallbackImg;
+    const mobImg = sel.mobileImage || fallbackImg;
 
-    return (<div style={{ minHeight: "100vh", background: "#06091a" }}>
-      {/* Back button — fixed top-left */}
+    return (<div style={{ minHeight: "100vh", background: "#0C092A", fontFamily: "Barlow,sans-serif" }}>
+      <style>{`.pv-detail-dimg{display:block}.pv-detail-mimg{display:none}
+@media(max-width:767px){.pv-detail-dimg{display:none !important}.pv-detail-mimg{display:block !important}}`}</style>
+      {/* Back button */}
       <div style={{ padding: "12px 16px 0" }}>
         <button onClick={() => setSel(null)} style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 10, padding: "10px 18px", color: "#fff", fontSize: 14, cursor: "pointer", fontWeight: 700, fontFamily: "inherit", minWidth: 44, minHeight: 44, display: "inline-flex", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 16 }}>{"←"}</span> Natrag
         </button>
       </div>
 
-      {/* Contained hero banner — admiral.hr style */}
+      {/* Contained hero banner — admiral.hr style with responsive images */}
       <div style={{ maxWidth: 1100, margin: "16px auto 0", padding: "0 16px" }}>
-        {heroImg ? (
-          <div style={{ borderRadius: 16, overflow: "hidden", position: "relative" }}>
-            <img src={heroImg} alt="" style={{ width: "100%", display: "block", borderRadius: 16 }} />
-          </div>
-        ) : (
-          <div style={{ borderRadius: 16, overflow: "hidden", position: "relative", height: 200, background: sel.grad, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {(deskImg || mobImg) ? (<>
+          {/* Desktop image */}
+          {deskImg && <div className="pv-detail-dimg" style={{ borderRadius: 8, overflow: "hidden" }}>
+            <img src={deskImg} alt="" style={{ width: "100%", display: "block" }} />
+          </div>}
+          {/* Mobile image */}
+          {mobImg && <div className="pv-detail-mimg" style={{ borderRadius: 8, overflow: "hidden" }}>
+            <img src={mobImg} alt="" style={{ width: "100%", display: "block" }} />
+          </div>}
+        </>) : (
+          <div style={{ borderRadius: 8, overflow: "hidden", height: 200, background: sel.grad, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
             <Particles />
             <span style={{ fontSize: 64, position: "relative", zIndex: 1 }}>{sel.emoji}</span>
           </div>
         )}
       </div>
 
-      {/* Title — always below image, centered */}
+      {/* Title — below image, centered, bold, uppercase like admiral.hr */}
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 20px 8px", textAlign: "center" }}>
-        <h1 style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "0.02em", lineHeight: 1.15, color: "#fff", margin: 0, textTransform: "uppercase" }}>{heroTitle}</h1>
-        {heroSubtitle && <p style={{ fontSize: 16, color: "rgba(255,255,255,.55)", marginTop: 12, fontWeight: 500, lineHeight: 1.6 }}>{heroSubtitle}</p>}
+        <h1 style={{ fontFamily: "Barlow,sans-serif", fontSize: 28, fontWeight: 700, lineHeight: 1.2, color: "#fff", margin: 0, textTransform: "uppercase" }}>{heroTitle}</h1>
+        {heroSubtitle && <p style={{ fontSize: 16, color: "rgba(255,255,255,.7)", marginTop: 14, fontWeight: 500, lineHeight: 1.6 }}>{heroSubtitle}</p>}
       </div>
 
-      {/* Content — single column, centered, like admiral.hr */}
+      {/* Content — single column, centered */}
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "8px 16px 60px" }}>
         {nonCtaBlocks.map((b, i) => <Rv key={b.id || i} delay={i * 0.06}><RB block={{...b, _pages: pages}} /></Rv>)}
         {ctaBlock && <Rv delay={nonCtaBlocks.length * 0.06}>
@@ -780,30 +812,46 @@ function Player({ promos, pages, onAdmin }) {
   }
 
   return (<>
-    <style>{`.pv-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr)) !important}
-@media(min-width:768px){.pv-grid{grid-template-columns:repeat(2,1fr) !important}}
-@media(min-width:1100px){.pv-grid{grid-template-columns:repeat(3,1fr) !important}}`}</style>
-    <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,.05)", background: "rgba(15,26,53,.75)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", position: "sticky", top: 0, zIndex: 100 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 18, cursor: "pointer", opacity: 0.7 }}>{"☰"}</span><div onMouseDown={sP} onMouseUp={eP} onTouchStart={sP} onTouchEnd={eP} style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "0.06em", cursor: "pointer", userSelect: "none", WebkitUserSelect: "none" }}>ADMIRAL</div></div>
-      <button style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#f5c518", color: "#06091a", fontSize: 12, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>REGISTRACIJA</button>
+    <style>{`.pv-grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:576px){.pv-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:992px){.pv-grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1600px){.pv-grid{grid-template-columns:repeat(4,1fr)}}`}</style>
+    <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,.05)", background: "#0F0D25", position: "sticky", top: 0, zIndex: 100 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 18, cursor: "pointer", opacity: 0.7 }}>{"☰"}</span><div onMouseDown={sP} onMouseUp={eP} onTouchStart={sP} onTouchEnd={eP} style={{ fontFamily: "Barlow,sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "0.06em", cursor: "pointer", userSelect: "none", WebkitUserSelect: "none" }}>ADMIRAL</div></div>
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <button style={{ padding: "5px 19px", borderRadius: 32, border: "none", background: "#4fbf24", color: "#fff", fontSize: 14, fontWeight: 400, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase" }}>Uplata</button>
+        <button style={{ padding: "5px 14px", borderRadius: 32, border: "1px solid #fff", background: "transparent", color: "#fff", fontSize: 14, fontWeight: 400, cursor: "pointer", fontFamily: "inherit", textTransform: "uppercase" }}>Prijava</button>
+      </div>
     </header>
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 12px 48px" }}>
-      <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20 }}>{[{ k: "sve", l: "Sve" }, { k: "casino", l: "Casino" }, { k: "kladenje", l: "Klađenje" }].map(x => (<button key={x.k} onClick={() => setF(x.k)} style={{ padding: "8px 22px", borderRadius: 50, border: f === x.k ? "1px solid #edf0f7" : "1px solid rgba(255,255,255,.05)", background: f === x.k ? "rgba(255,255,255,.05)" : "transparent", color: f === x.k ? "#edf0f7" : "#8d99b0", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{x.l}</button>))}</div>
-      <div className="pv-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>{list.map((p, idx) => {
-        const cardImg = p.blocks?.find(b => b.type === "hero" && b.data?.imageUrl)?.data?.imageUrl;
-        return (<Rv key={p.id} delay={idx * 0.04}><div onClick={() => setSel(p)} onMouseEnter={() => setHov(p.id)} onMouseLeave={() => setHov(null)} style={{ background: "#111d3a", borderRadius: 16, overflow: "hidden", border: hov === p.id ? "1px solid rgba(245,197,24,.12)" : "1px solid rgba(255,255,255,.05)", cursor: "pointer", transition: "all .3s", display: "flex", flexDirection: "column", transform: hov === p.id ? "translateY(-5px)" : "none", boxShadow: hov === p.id ? "0 14px 44px rgba(0,0,0,.45)" : "none" }}>
-          <div style={{ height: 175, position: "relative", overflow: "hidden", background: p.grad, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {cardImg ? <img src={cardImg} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0, transition: "transform .4s", transform: hov === p.id ? "scale(1.08)" : "scale(1)" }} /> : <span style={{ fontSize: 48, position: "relative", zIndex: 1, transition: "transform .4s", transform: hov === p.id ? "scale(1.15)" : "scale(1)" }}>{p.emoji}</span>}
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #111d3a 0%, transparent 50%)" }} />
-            {p.badge && <span style={{ position: "absolute", top: 12, right: 12, padding: "4px 12px", borderRadius: 8, fontSize: 10, fontWeight: 800, zIndex: 2, color: "#fff", background: p.badge === "HOT" ? "linear-gradient(135deg,#ef4444,#dc2626)" : "linear-gradient(135deg,#22c55e,#16a34a)", animation: "badgePulse 2s ease-in-out infinite" }}>{p.badge}</span>}
-            <span style={{ position: "absolute", bottom: 10, left: 12, padding: "4px 10px", background: "rgba(0,0,0,.5)", backdropFilter: "blur(6px)", borderRadius: 6, fontSize: 10, color: "rgba(255,255,255,.6)", fontWeight: 600, textTransform: "uppercase", zIndex: 2 }}>{p.c === "casino" ? "Casino" : "Klađenje"}</span>
+    {/* Sub-navigation — Nagrade / Promocije */}
+    <div style={{ background: "#002157", display: "flex", justifyContent: "center", gap: 15, padding: "0", borderBottom: "1px solid rgba(255,255,255,.1)" }}>
+      <div style={{ padding: "8px 0", fontSize: 16, fontWeight: 500, color: "rgba(255,255,255,.6)", cursor: "pointer", position: "relative" }}>Nagrade</div>
+      <div style={{ padding: "8px 0", fontSize: 16, fontWeight: 500, color: "#fff", cursor: "pointer", position: "relative" }}>Promocije<div style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: 4, background: "#4188FE", borderRadius: "10px 10px 0 0" }} /></div>
+    </div>
+    <div style={{ maxWidth: 1340, margin: "0 auto", padding: "20px 15px 48px", fontFamily: "Barlow,sans-serif" }}>
+      {/* Filter buttons — admiral.hr style */}
+      <div style={{ display: "flex", justifyContent: "center", gap: 15, marginBottom: 20 }}>{[{ k: "sve", l: "Sve" }, { k: "casino", l: "Casino" }, { k: "kladenje", l: "Klađenje" }].map(x => (<button key={x.k} onClick={() => setF(x.k)} style={{ padding: 8, borderRadius: 4, border: f === x.k ? "2px solid #2B80FF" : "1px solid #fff", background: "transparent", color: "#fff", fontSize: 14, fontWeight: 400, cursor: "pointer", fontFamily: "inherit" }}>{x.l}</button>))}</div>
+      {/* Promo cards grid — admiral.hr exact layout */}
+      <div className="pv-grid">{list.map((p, idx) => {
+        const cardImg = p.cardImage || p.blocks?.find(b => b.type === "hero" && b.data?.imageUrl)?.data?.imageUrl;
+        const hasLongerText = (p.d || "").length > 120;
+        return (<Rv key={p.id} delay={idx * 0.04}>
+          <div onClick={() => setSel(p)} style={{ background: "#0D1A3C", borderRadius: 0, overflow: "hidden", cursor: "pointer", display: "flex", flexDirection: "column", height: "100%" }}>
+            {/* Card image — full width, natural height like admiral.hr */}
+            {cardImg ? <img src={cardImg} alt="" style={{ width: "100%", display: "block" }} />
+            : <div style={{ height: 180, background: p.grad, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}><Particles /><span style={{ fontSize: 48, position: "relative", zIndex: 1 }}>{p.emoji}</span></div>}
+            {/* Card content */}
+            <div style={{ padding: "16px 20px", flex: 1, display: "flex", flexDirection: "column" }}>
+              <h2 style={{ fontFamily: "Barlow,sans-serif", fontSize: 18, fontWeight: 700, margin: "0 0 12px", textTransform: "uppercase", lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.t}</h2>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,.75)", lineHeight: 1.6, flex: 1, display: "-webkit-box", WebkitLineClamp: hasLongerText ? 4 : 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.d}</div>
+              {/* CTA button — admiral.hr blue primary btn */}
+              <div style={{ textAlign: "center", marginTop: 16 }}>
+                <button style={{ width: "80%", padding: "10px 0", borderRadius: 32, border: "none", background: "#4188FE", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{p.cta || "Više"}</button>
+                <div style={{ marginTop: 10, fontSize: 13, color: "rgba(255,255,255,.5)", cursor: "pointer" }}>Više detalja i uvjeti promocije</div>
+              </div>
+            </div>
           </div>
-          <div style={{ padding: "14px 18px", flex: 1, display: "flex", flexDirection: "column" }}>
-            <h3 style={{ fontFamily: "Barlow Condensed,sans-serif", fontSize: 17, fontWeight: 800, margin: "0 0 8px" }}>{p.t}</h3>
-            <p style={{ fontSize: 13, color: "#8d99b0", lineHeight: 1.55, margin: "0 0 14px", flex: 1, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.d}</p>
-            <button style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #4a9eff, #2d7ad6)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 4px 16px rgba(74,158,255,.25)" }}>{p.cta || "Više"}</button>
-          </div>
-        </div></Rv>);
+        </Rv>);
       })}</div>
     </div>
   </>);
@@ -829,6 +877,7 @@ export default function App() {
         id: p.id, t: p.title, s: p.slug, d: p.description, c: p.category,
         status: p.status, emoji: p.emoji, grad: p.gradient, cta: p.cta_text,
         badge: p.badge || "", blocks: p.blocks || [],
+        cardImage: p.card_image || "", desktopImage: p.desktop_image || "", mobileImage: p.mobile_image || "",
       }));
       setPromos(dbPromos);
       setPages(pagesRes.data || []);
@@ -844,6 +893,7 @@ export default function App() {
   const save = async (u) => {
     const row = { title: u.t, slug: u.s, description: u.d, category: u.c, status: u.status,
       emoji: u.emoji, gradient: u.grad, cta_text: u.cta, badge: u.badge || "",
+      card_image: u.cardImage || "", desktop_image: u.desktopImage || "", mobile_image: u.mobileImage || "",
       blocks: u.blocks, updated_at: new Date().toISOString() };
     if (typeof u.id === "string" && u.id.length > 10) {
       await supabase.from("promotions").update(row).eq("id", u.id);
