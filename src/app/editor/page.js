@@ -2,6 +2,112 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 
+// ═══════════════════════════════════════════════════════════════
+// Supabase Storage Upload
+// ═══════════════════════════════════════════════════════════════
+async function uploadToSupabase(file, folder = 'promos') {
+  const ext = file.name.split('.').pop();
+  const name = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+  const { data, error } = await supabase.storage
+    .from('promo-images')
+    .upload(name, file, { cacheControl: '3600', upsert: false });
+  if (error) throw error;
+  const { data: urlData } = supabase.storage
+    .from('promo-images')
+    .getPublicUrl(name);
+  return urlData.publicUrl;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ImageUpload — drag & drop + file picker + URL fallback
+// ═══════════════════════════════════════════════════════════════
+function ImageUpload({ label, value, onChange, height = 120 }) {
+  const [uploading, setUploading] = useState(false);
+  const [drag, setDrag] = useState(false);
+  const [error, setError] = useState(null);
+  const [urlMode, setUrlMode] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+
+  const handleFile = async (file) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) { setError('Max 5 MB'); return; }
+    setUploading(true);
+    setError(null);
+    try {
+      const url = await uploadToSupabase(file);
+      onChange(url);
+    } catch (e) {
+      console.error('Upload error:', e);
+      // Fallback: use base64 DataURL if Storage not configured
+      const r = new FileReader();
+      r.onload = ev => onChange(ev.target.result);
+      r.readAsDataURL(file);
+    }
+    setUploading(false);
+  };
+
+  const ulst = {display:"block",fontSize:10,fontWeight:700,color:"#4a5670",marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"};
+
+  return (
+    <div style={{marginBottom:10}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+        <label style={ulst}>{label}</label>
+        {!value && <button onClick={()=>setUrlMode(!urlMode)} style={{background:"none",border:"none",color:"#4a5670",fontSize:9,cursor:"pointer",fontWeight:600,padding:0}}>{urlMode?"📁 Upload":"🔗 URL"}</button>}
+      </div>
+      {value ? (
+        <div style={{position:"relative",borderRadius:10,overflow:"hidden",border:"1px solid rgba(255,255,255,.08)"}}>
+          <img src={value} alt="" style={{width:"100%",maxHeight:height,objectFit:"cover",display:"block"}}/>
+          <div style={{position:"absolute",top:0,left:0,right:0,display:"flex",justifyContent:"space-between",padding:4}}>
+            <div style={{fontSize:8,color:"#fff",background:"rgba(0,0,0,.6)",borderRadius:4,padding:"2px 6px",fontWeight:600}}>
+              {value.startsWith("data:")?"Base64":"Storage"}
+            </div>
+            <button onClick={()=>onChange("")} style={{width:26,height:26,borderRadius:6,
+              background:"rgba(0,0,0,.7)",border:"1px solid rgba(239,68,68,.3)",
+              color:"#ef4444",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",
+              justifyContent:"center"}}>✕</button>
+          </div>
+        </div>
+      ) : urlMode ? (
+        <div style={{display:"flex",gap:4}}>
+          <input value={urlInput} onChange={e=>setUrlInput(e.target.value)} placeholder="https://..." style={{flex:1,background:"rgba(0,0,0,.3)",border:"1px solid rgba(255,255,255,.05)",borderRadius:8,padding:"8px 10px",color:"#edf0f7",fontSize:12,fontFamily:"inherit",outline:"none"}}/>
+          <button onClick={()=>{if(urlInput.trim()){onChange(urlInput.trim());setUrlInput("");}}} style={{padding:"8px 12px",borderRadius:8,border:"none",background:"#f5c518",color:"#06091a",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>OK</button>
+        </div>
+      ) : (
+        <div
+          onDragOver={e=>{e.preventDefault();setDrag(true);}}
+          onDragLeave={()=>setDrag(false)}
+          onDrop={e=>{e.preventDefault();setDrag(false);handleFile(e.dataTransfer.files[0]);}}
+          style={{padding:"16px 12px",borderRadius:10,
+            border:`2px dashed ${drag?"#f5c518":"rgba(255,255,255,.08)"}`,
+            background:drag?"rgba(245,197,24,.04)":"rgba(255,255,255,.015)",
+            textAlign:"center",transition:"all .2s",cursor:"pointer"}}
+        >
+          {uploading ? (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              <div style={{width:16,height:16,border:"2px solid rgba(245,197,24,.2)",borderTop:"2px solid #f5c518",borderRadius:"50%",animation:"spin 1s linear infinite"}}/>
+              <span style={{fontSize:12,color:"#f5c518",fontWeight:600}}>Uploading...</span>
+            </div>
+          ) : (
+            <>
+              <div style={{fontSize:22,marginBottom:2,opacity:0.5}}>📁</div>
+              <div style={{fontSize:10,color:"#8d99b0",marginBottom:8,lineHeight:1.5}}>
+                Povuci sliku ovdje ili
+              </div>
+              <label style={{padding:"6px 16px",borderRadius:6,background:"rgba(245,197,24,.08)",
+                border:"1px solid rgba(245,197,24,.15)",color:"#f5c518",fontSize:11,
+                fontWeight:700,cursor:"pointer",display:"inline-block"}}>
+                Odaberi datoteku
+                <input type="file" accept="image/*" style={{display:"none"}}
+                  onChange={e=>handleFile(e.target.files[0])}/>
+              </label>
+            </>
+          )}
+        </div>
+      )}
+      {error && <div style={{fontSize:10,color:"#ef4444",marginTop:4}}>{error}</div>}
+    </div>
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════
 // ADMIRAL CMS — s "Put do Finala" Calendar blokom
@@ -732,16 +838,7 @@ function PropEdit({block,onChange,pages,onCreatePage}){
   if(block.type==="hero") return<>
     <Field l="Naslov" k="title" value={d.title} onFieldChange={set}/>
     <Field l="Podnaslov" k="subtitle" value={d.subtitle} onFieldChange={set}/>
-    <div style={{marginBottom:10}}><label style={lst}>Hero slika</label>
-      <input value={d.imageUrl||""} onChange={e=>set("imageUrl",e.target.value)} placeholder="https://..." style={ist}/>
-      <div style={{display:"flex",gap:6,marginTop:6}}>
-        <label style={{flex:1,padding:"10px 0",borderRadius:8,border:"1px dashed rgba(245,197,24,.2)",background:"rgba(245,197,24,.03)",color:"#f5c518",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"center"}}>
-          📁 Upload<input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>set("imageUrl",ev.target.result);r.readAsDataURL(f);}}/>
-        </label>
-        {d.imageUrl&&<button onClick={()=>set("imageUrl","")} style={{padding:"10px 14px",borderRadius:8,border:"1px solid rgba(239,68,68,.2)",background:"transparent",color:"#ef4444",fontSize:12,cursor:"pointer"}}>✕</button>}
-      </div>
-      {d.imageUrl&&<img src={d.imageUrl} alt="" style={{width:"100%",height:60,objectFit:"cover",borderRadius:8,marginTop:6}}/>}
-    </div>
+    <ImageUpload label="Hero slika" value={d.imageUrl||""} onChange={v=>set("imageUrl",v)} height={80}/>
   </>;
 
   if(block.type==="text") return <Field l="Tekst" k="text" multi value={d.text} onFieldChange={set}/>;
@@ -1034,9 +1131,9 @@ function Editor({promo,onSave,onBack,onDelete,pages,onCreatePage}){
         </div>
         <div style={{marginBottom:10,padding:"12px",borderRadius:10,background:"rgba(65,136,254,.04)",border:"1px solid rgba(65,136,254,.12)"}}>
           <div style={{fontSize:11,fontWeight:700,color:"#4188FE",marginBottom:10,textTransform:"uppercase",letterSpacing:"0.05em"}}>Slike promocije</div>
-          <div style={{marginBottom:8}}><label style={lst}>Slika za karticu</label><input value={cardImage} onChange={e=>{setCardImage(e.target.value);markDirty();}} placeholder="https://..." style={ist}/>{cardImage&&<img src={cardImage} alt="" style={{width:"100%",height:50,objectFit:"cover",borderRadius:6,marginTop:4}}/>}</div>
-          <div style={{marginBottom:8}}><label style={lst}>Desktop banner</label><input value={desktopImage} onChange={e=>{setDesktopImage(e.target.value);markDirty();}} placeholder="https://..." style={ist}/>{desktopImage&&<img src={desktopImage} alt="" style={{width:"100%",height:50,objectFit:"cover",borderRadius:6,marginTop:4}}/>}</div>
-          <div><label style={lst}>Mobilni banner</label><input value={mobileImage} onChange={e=>{setMobileImage(e.target.value);markDirty();}} placeholder="https://..." style={ist}/>{mobileImage&&<img src={mobileImage} alt="" style={{width:"100%",height:50,objectFit:"cover",borderRadius:6,marginTop:4}}/>}</div>
+          <ImageUpload label="Slika za karticu" value={cardImage} onChange={v=>{setCardImage(v);markDirty();}} height={80}/>
+          <ImageUpload label="Desktop banner" value={desktopImage} onChange={v=>{setDesktopImage(v);markDirty();}} height={80}/>
+          <ImageUpload label="Mobilni banner" value={mobileImage} onChange={v=>{setMobileImage(v);markDirty();}} height={80}/>
         </div>
         <DeleteBtn onDelete={()=>onDelete(promo.id)}/>
       </div>
