@@ -286,10 +286,44 @@ function CalendarBlock({ data, inEditor }) {
   }
 
   // ── Grid View ──
-  const cardSize = 'min(calc((100% - ' + (cols-1)*10 + 'px) / ' + cols + '), 140px)';
+  const calCSS = `
+.pdf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;padding:4px 0}
+.pdf-cal-scroll{
+  position:relative;
+  max-height:calc((min(100vw - 32px, 900px) - 60px) / 7 * 3 + 20px);
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  border-radius:10px;margin:0 12px 12px;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;
+}
+.pdf-cal-scroll::-webkit-scrollbar{width:5px}
+.pdf-cal-scroll::-webkit-scrollbar-track{background:transparent}
+.pdf-cal-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
+.pdf-dc-day{font-size:clamp(12px,2vw,16px)}
+.pdf-dc-promo{font-size:clamp(14px,2.2vw,22px)}
+.pdf-dc-date{font-size:clamp(11px,1.6vw,15px)}
+.pdf-dc-lock{font-size:clamp(16px,3vw,26px)}
+.pdf-dc-danas{font-size:8px;padding:2px 8px}
+.pdf-finale-span{grid-column:span 4}
+@media(max-width:700px){
+  .pdf-cal-grid{grid-template-columns:repeat(4,1fr);gap:7px}
+  .pdf-cal-scroll{max-height:calc(((100vw - 32px - 21px) / 4) * 3 + 14px)}
+  .pdf-dc-day{font-size:14px!important}
+  .pdf-dc-promo{font-size:18px!important}
+  .pdf-dc-date{font-size:13px!important}
+  .pdf-dc-lock{font-size:22px!important}
+  .pdf-dc-danas{font-size:7px!important;padding:1px 6px!important}
+  .pdf-finale-span{grid-column:span 4}
+}
+@media(max-width:420px){
+  .pdf-cal-grid{gap:6px}
+  .pdf-cal-scroll{max-height:calc(((100vw - 32px - 18px) / 4) * 3 + 12px)}
+  .pdf-finale-span{grid-column:span 2}
+}
+`;
 
   return (
     <div style={{background:'#080e1e',padding:'0 0 8px'}}>
+      <style>{calCSS}</style>
       {/* Title */}
       <div style={{textAlign:'center',padding:'20px 16px 14px'}}>
         <h2 style={{fontFamily:'Oswald,sans-serif',fontWeight:700,fontSize:'clamp(18px,4vw,28px)',
@@ -306,19 +340,8 @@ function CalendarBlock({ data, inEditor }) {
       </div>
 
       {/* Scrollable grid */}
-      <div ref={scrollRef} className="cal-scroll" style={{
-        position:'relative',
-        maxHeight: cols===7
-          ? 'calc((min(100vw - 32px, 900px) - ' + (cols-1)*10 + 'px) / ' + cols + ' * 3 + 20px)'
-          : 'calc((min(100vw - 32px, 900px) - ' + (cols-1)*10 + 'px) / ' + cols + ' * 3 + 20px)',
-        overflowY:'auto',overflowX:'hidden',WebkitOverflowScrolling:'touch',
-        borderRadius:10,margin:'0 12px 12px',
-        scrollbarWidth:'thin',scrollbarColor:'rgba(255,255,255,.15) transparent'
-      }}>
-        <div className="cal-inner-grid" style={{
-          display:'grid',gridTemplateColumns:`repeat(${cols},1fr)`,
-          gap:10,padding:'4px 0 4px'
-        }}>
+      <div ref={scrollRef} className="pdf-cal-scroll">
+        <div className="cal-inner-grid pdf-cal-grid">
           {/* Days 1-38 */}
           {Array.from({length:38},(_,i) => {
             const n = i+1;
@@ -350,32 +373,30 @@ function CalendarBlock({ data, inEditor }) {
               >
                 {/* DANAS badge */}
                 {state==='active' && (
-                  <div style={{position:'absolute',top:-1,left:'50%',transform:'translateX(-50%)',
+                  <div className="pdf-dc-danas" style={{position:'absolute',top:-1,left:'50%',transform:'translateX(-50%)',
                     background:'#f5c518',color:'#080e1e',fontFamily:'Barlow Condensed,sans-serif',
-                    fontWeight:700,fontSize:7,letterSpacing:1,textTransform:'uppercase',
-                    padding:'1px 6px',borderRadius:'0 0 4px 4px',zIndex:4}}>DANAS</div>
+                    fontWeight:700,letterSpacing:1,textTransform:'uppercase',
+                    borderRadius:'0 0 4px 4px',zIndex:4}}>DANAS</div>
                 )}
                 {/* Dan number */}
-                <span style={{position:'absolute',top:7,left:0,right:0,textAlign:'center',
+                <span className="pdf-dc-day" style={{position:'absolute',top:7,left:0,right:0,textAlign:'center',
                   fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                  fontSize:'clamp(11px,1.8vw,16px)',letterSpacing:2,textTransform:'uppercase',
+                  letterSpacing:2,textTransform:'uppercase',
                   color: state==='active' ? '#f5c518' : '#fff'}}>
                   Dan {n}
                 </span>
                 {/* Content */}
                 {state==='locked'
-                  ? <span style={{fontSize:'clamp(16px,3vw,26px)',opacity:0.35}}>🔒</span>
-                  : <span style={{fontFamily:'Oswald,sans-serif',fontWeight:700,
-                      fontSize:'clamp(13px,2vw,22px)',color:'#fff',
-                      textAlign:'center',lineHeight:1.05,textTransform:'uppercase',
+                  ? <span className="pdf-dc-lock" style={{opacity:0.35}}>🔒</span>
+                  : <span className="pdf-dc-promo" style={{fontFamily:'Oswald,sans-serif',fontWeight:700,
+                      color:'#fff',textAlign:'center',lineHeight:1.05,textTransform:'uppercase',
                       letterSpacing:0.5,textShadow:'0 2px 8px rgba(0,0,0,0.5)'}}>
                       {amt}
                     </span>
                 }
                 {/* Date */}
-                <span style={{position:'absolute',bottom:5,left:0,right:0,textAlign:'center',
+                <span className="pdf-dc-date" style={{position:'absolute',bottom:5,left:0,right:0,textAlign:'center',
                   fontFamily:'Barlow Condensed,sans-serif',fontWeight:700,
-                  fontSize:'clamp(11px,1.6vw,15px)',
                   color: state==='active' ? 'rgba(245,197,24,0.6)' : state==='open' ? '#fff' : 'rgba(255,255,255,0.55)'}}>
                   {d.getDate()}. {MONTH_SHORT[d.getMonth()]}
                 </span>
@@ -383,9 +404,8 @@ function CalendarBlock({ data, inEditor }) {
             );
           })}
 
-          {/* Finale card — spans remaining cols */}
-          <div style={{
-            gridColumn: `span ${cols===7 ? 4 : cols===4 ? 2 : 3}`,
+          {/* Finale card — responsive span via CSS class */}
+          <div className="pdf-finale-span" style={{
             position:'relative',
             background:'linear-gradient(135deg,#0d1a33 0%,#0f2952 50%,#0d1a33 100%)',
             border: activeDayNum>=39 ? '2px solid #f5c518' : '2px solid #1c3a65',
